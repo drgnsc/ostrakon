@@ -11,6 +11,11 @@ use serde::Serialize;
 /// Local images are served by the `art` protocol handler, never by path.
 pub const ART_ORIGIN: &str = "https://art.localhost/";
 
+/// Every id that comes from a document (heading slugs, footnotes, ids in raw HTML) gets this
+/// prefix, so a heading like "Toast" can never shadow an element of the app's own UI. In-document
+/// anchors are rewritten to match, so the frontend never needs to know the prefix.
+pub const ID_PREFIX: &str = "user-content-";
+
 #[derive(Serialize, Debug, Clone, PartialEq)]
 pub struct TocEntry {
     pub level: u8,
@@ -55,7 +60,8 @@ pub fn render(source: &str) -> Rendered {
                     if let Event::Start(Tag::Heading { id: slot, .. }) = &mut events[start] {
                         *slot = Some(CowStr::from(id.clone()));
                     }
-                    toc.push(TocEntry { level: level_number(*level), text, id });
+                    // ammonia prefixes the id attribute; the TOC must point at the same id.
+                    toc.push(TocEntry { level: level_number(*level), text, id: format!("{ID_PREFIX}{id}") });
                 }
             }
             _ => {}
@@ -112,8 +118,10 @@ fn sanitize(raw: &str) -> String {
         .add_tag_attributes("a", ["title"])
         .add_tag_attributes("img", ["title"])
         .add_generic_attributes(["id"])
+        .id_prefix(Some(ID_PREFIX))
         .attribute_filter(|element, attribute, value| match (element, attribute) {
             ("img", "src") => image_source(value).map(Cow::Owned),
+            ("a", "href") => Some(prefix_fragment(value)),
             _ => Some(Cow::Borrowed(value)),
         });
     builder.allowed_classes(allowed_classes());
@@ -134,6 +142,19 @@ fn image_source(value: &str) -> Option<String> {
         "{ART_ORIGIN}?p={}",
         utf8_percent_encode(value.trim(), NON_ALPHANUMERIC)
     ))
+}
+
+/// `#sekcja` and `inny.md#sekcja` point at document ids, which carry `ID_PREFIX`.
+/// Absolute URLs (`https://…#x`, `mailto:`) keep their fragment untouched.
+fn prefix_fragment(href: &str) -> Cow<'_, str> {
+    let Some((before, fragment)) = href.split_once('#') else {
+        return Cow::Borrowed(href);
+    };
+    let absolute = before.starts_with("//") || before.split_once(':').is_some_and(|(scheme, _)| !scheme.contains('/'));
+    if absolute || fragment.is_empty() || fragment.starts_with(ID_PREFIX) {
+        return Cow::Borrowed(href);
+    }
+    Cow::Owned(format!("{before}#{ID_PREFIX}{fragment}"))
 }
 
 fn allowed_classes() -> HashMap<&'static str, HashSet<&'static str>> {
@@ -336,9 +357,53 @@ mod tests {
     fn builds_toc_with_github_anchors() {
         let doc = render("# Cel główny\n\n## Zakres\n\n## Zakres\n\n### `kod` i tekst!\n");
         let ids: Vec<&str> = doc.toc.iter().map(|t| t.id.as_str()).collect();
-        assert_eq!(ids, ["cel-główny", "zakres", "zakres-1", "kod-i-tekst"]);
+        assert_eq!(
+            ids,
+            ["user-content-cel-główny", "user-content-zakres", "user-content-zakres-1", "user-content-kod-i-tekst"]
+        );
         assert_eq!(doc.toc[0].level, 1);
-        assert!(doc.html.contains("id=\"zakres-1\""));
+        assert!(doc.html.contains("id=\"user-content-zakres-1\""));
+        // Every TOC entry points at an id that really exists in the HTML.
+        for entry in &doc.toc {
+            assert!(doc.html.contains(&format!("id=\"{}\"", entry.id)), "{}: {}", entry.id, doc.html);
+        }
+    }
+
+    #[test]
+    fn heading_ids_cannot_collide_with_ui_ids() {
+        let doc = render("# Toast\n\n## Palette status\n\n## Toc\n");
+        assert!(!doc.html.contains("id=\"toast\""), "{}", doc.html);
+        assert!(!doc.html.contains("id=\"palette-status\""), "{}", doc.html);
+        assert!(!doc.html.contains("id=\"toc\""), "{}", doc.html);
+        assert!(doc.html.contains("id=\"user-content-toast\""), "{}", doc.html);
+        assert_eq!(doc.toc[0].id, "user-content-toast");
+    }
+
+    #[test]
+    fn internal_anchor_still_reaches_prefixed_heading() {
+        let doc = render("[idź do sekcji](#sekcja)\n\n## Sekcja\n");
+        assert!(doc.html.contains("href=\"#user-content-sekcja\""), "{}", doc.html);
+        assert!(doc.html.contains("id=\"user-content-sekcja\""), "{}", doc.html);
+        assert_eq!(doc.toc[0].id, "user-content-sekcja");
+
+        // Links to a section of another document, and links already written with the prefix.
+        assert!(html("[a](inny.md#zakres)").contains("href=\"inny.md#user-content-zakres\""));
+        assert!(html("[a](#user-content-x)").contains("href=\"#user-content-x\""));
+        // External fragments are not ours to rewrite.
+        assert!(html("[a](https://example.com/#zakres)").contains("href=\"https://example.com/#zakres\""));
+        // Footnote references and definitions stay paired.
+        let notes = html("x[^1]\n\n[^1]: note\n");
+        assert!(notes.contains("href=\"#user-content-1\""), "{notes}");
+        assert!(notes.contains("id=\"user-content-1\""), "{notes}");
+    }
+
+    #[test]
+    fn raw_html_ids_get_the_prefix_too() {
+        let out = html("<div id=\"toast\">x</div>\n\n<p><a id=\"palette-roots\">y</a></p>\n");
+        assert!(!out.contains("id=\"toast\""), "{out}");
+        assert!(!out.contains("id=\"palette-roots\""), "{out}");
+        assert!(out.contains("id=\"user-content-toast\""), "{out}");
+        assert!(out.contains("id=\"user-content-palette-roots\""), "{out}");
     }
 
     #[test]
