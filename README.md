@@ -8,7 +8,7 @@ Tylko odczyt. Tauri 2 + Rust, frontend bez frameworka i bez zależności npm w r
 
 | Klawisz | Działanie |
 |---|---|
-| `Ctrl+P` | archiwum: szukanie po wszystkich `.md` w dodanych folderach (domyślnie `C:\Projekty`) |
+| `Ctrl+P` | archiwum: szukanie po wszystkich `.md` w folderach dodanych przyciskiem „Dodaj folder” (na początku lista jest pusta) |
 | `Ctrl+O` | otwórz plik |
 | `Ctrl+B` | pokaż lub ukryj panel boczny |
 | `Ctrl+T` | jasny lub ciemny kamień |

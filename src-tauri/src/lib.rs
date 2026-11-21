@@ -119,20 +119,13 @@ fn data_file(app: &AppHandle, name: &str) -> Result<PathBuf, String> {
     Ok(dir.join(name))
 }
 
+/// Without a saved config the archive starts empty: the user picks folders with "Dodaj folder".
 fn load_config(app: &AppHandle) -> Config {
-    let saved = data_file(app, "config.json")
+    data_file(app, "config.json")
         .ok()
         .and_then(|p| fs::read_to_string(p).ok())
-        .and_then(|t| serde_json::from_str::<Config>(&t).ok());
-    saved.unwrap_or_else(|| {
-        let default = Path::new(r"C:\Projekty");
-        let roots = if default.is_dir() {
-            vec![default.to_string_lossy().into_owned()]
-        } else {
-            app.path().document_dir().map(|d| vec![d.to_string_lossy().into_owned()]).unwrap_or_default()
-        };
-        Config { roots }
-    })
+        .and_then(|t| serde_json::from_str::<Config>(&t).ok())
+        .unwrap_or_default()
 }
 
 fn save_json<T: Serialize>(app: &AppHandle, name: &str, value: &T) -> Result<(), String> {

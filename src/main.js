@@ -21,6 +21,7 @@ const state = {
   current: null,
   backStack: [],
   archive: [],
+  roots: null,
   scanning: false,
   scale: 1,
   sidebarHidden: false,
@@ -416,6 +417,8 @@ function renderPalette() {
   }
 
   const items = [];
+  const noRoots = state.roots?.length === 0;
+  if (noRoots && !query) items.push(paletteNote("Archiwum jest puste. Dodaj folder z dokumentami przyciskiem „Dodaj folder” poniżej."));
   for (const group of groups) {
     if (!group.entries.length) continue;
     if (group.title) {
@@ -431,14 +434,21 @@ function renderPalette() {
     }
   }
   if (!items.length) {
-    const empty = document.createElement("li");
-    empty.className = "empty";
-    empty.textContent = state.scanning ? "Przeszukuję archiwum…" : "Nic nie znaleziono.";
-    items.push(empty);
+    items.push(paletteNote(
+      noRoots ? "Archiwum jest puste. Dodaj folder przyciskiem „Dodaj folder” poniżej."
+        : state.scanning ? "Przeszukuję archiwum…" : "Nic nie znaleziono.",
+    ));
   }
   paletteList.replaceChildren(...items);
   selected = 0;
   markSelected();
+}
+
+function paletteNote(text) {
+  const note = document.createElement("li");
+  note.className = "empty";
+  note.textContent = text;
+  return note;
 }
 
 function markSelected() {
@@ -453,6 +463,9 @@ function renderPaletteStatus() {
 
 async function renderRoots() {
   const roots = await invoke("archive_roots");
+  const emptinessChanged = (state.roots?.length === 0) !== (roots.length === 0);
+  state.roots = roots;
+  if (emptinessChanged && palette.open) renderPalette();
   $("palette-roots").replaceChildren(
     ...roots.map((path) => {
       const chip = document.createElement("button");
