@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "description": "Local, read-only Markdown viewer styled as an ancient artifact.",
+  "license": "MIT",
+  "repository": "https://github.com/drgnsc/ostrakon",
   "scripts": {
     "tauri": "tauri",
     "dev": "tauri dev",

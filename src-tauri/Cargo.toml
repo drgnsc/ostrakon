@@ -4,6 +4,8 @@ version = "0.1.0"
 description = "Local, read-only Markdown viewer styled as an ancient artifact"
 authors = ["Orphalese Solutions"]
 edition = "2021"
+license = "MIT"
+repository = "https://github.com/drgnsc/ostrakon"
 
 [lib]
 name = "ostrakon_lib"
