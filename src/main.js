@@ -260,9 +260,13 @@ function renderStats(doc) {
   $("stats").textContent = `${doc.words.toLocaleString("pl-PL")} słów · ${minutes} min\n${date}`;
 }
 
+// Where a heading lands after a jump, measured from the scroller's top: just past the 26px fade
+// at the top of the scroller (style.css, #scroller --fade).
+const HEADING_LANDING = 28;
+
 function scrollToFragment(fragment) {
   const target = document.getElementById(decodeURIComponent(fragment));
-  if (target) scroller.scrollTop += target.getBoundingClientRect().top - scroller.getBoundingClientRect().top - 40;
+  if (target) scroller.scrollTop += target.getBoundingClientRect().top - scroller.getBoundingClientRect().top - HEADING_LANDING;
 }
 
 let headingObserver = null;

@@ -35,6 +35,8 @@
   --rim-shade: rgb(26 37 48 / 0.28);
   --rim-lit: rgb(255 255 255 / 0.55);
   --grain-opacity: 1;
+  --thumb: #8a8578;       /* Stone */
+  --thumb-hover: #3d4f5c; /* Slate */
 }
 
 :root[data-theme="dark"] {
@@ -58,6 +60,8 @@
   --crack-lit: rgb(245 241 234 / 0.1);
   --rim-shade: rgb(0 0 0 / 0.5);
   --rim-lit: rgb(245 241 234 / 0.13);
+  --thumb: #8f98a0;
+  --thumb-hover: #b8bfc4;
 }
 
 * { box-sizing: border-box; }
@@ -142,6 +146,23 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   padding: 10px 14px 16px 20px;
   color: var(--slab-ink);
   overflow: hidden;
+  position: relative;
+  isolation: isolate;
+}
+/* A wash of sand over the rough grain, so the texture does not run under the letters at full
+   strength. Soft right and top edges, so the calmer area does not read as a box. */
+#side::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--slab);
+  opacity: 0.72;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 30px), transparent), linear-gradient(transparent, #000 24px);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, #000 calc(100% - 30px), transparent), linear-gradient(transparent, #000 24px);
+  mask-composite: intersect;
 }
 .no-side #side { display: none; }
 
@@ -154,18 +175,19 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   width: 100%;
   padding: 3px 0 3px 10px;
   border-left: 2px solid transparent;
-  font-size: 13px;
-  line-height: 1.35;
+  font-size: 14px;
+  line-height: 1.5;
   text-align: left;
   color: var(--slab-ink);
   transition: color 0.1s;
 }
-#toc .depth-1 button { padding-left: 20px; font-size: 12.5px; }
-#toc .depth-2 button { padding-left: 30px; font-size: 12px; color: var(--slab-faint); }
+#toc .depth-0 button { font-weight: 500; }
+#toc .depth-1 button { padding-left: 20px; }
+#toc .depth-2 button { padding-left: 30px; color: var(--slab-faint); }
 #toc button:hover, #siblings button:hover { color: var(--heading); }
 #toc button[aria-current], #siblings button[aria-current] {
-  color: var(--heading);
-  font-weight: 500;
+  color: var(--heading); /* Deep #1a2530 in the light theme */
+  font-weight: 600;
   border-left-color: var(--lantern);
 }
 #toc::-webkit-scrollbar, #siblings::-webkit-scrollbar { width: 0; }
@@ -190,8 +212,45 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 #cracks { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .dropping #tablet { outline: 2px solid var(--lantern); outline-offset: -8px; }
 
-#scroller { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; scrollbar-gutter: stable; }
+/* The tablet's chipped clip-path cuts inward (chips along the sides reach ~11px), but the
+   scroller is a plain rectangle. Its box stops 12px short of the top, 14px short of the bottom
+   and 12px short of the right edge, so no line and no part of the scrollbar can ever reach the
+   chipped band, whatever the compositor does with the ancestor's clip-path. Inside, lines fade
+   out toward the top and bottom (same fade as before, measured from the tablet's edge). The
+   scrollbar strip (13px) stays unmasked. */
+#scroller {
+  position: absolute;
+  inset: 12px 12px 14px 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+  --fade: linear-gradient(transparent, #000 26px, #000 calc(100% - 28px), transparent);
+  -webkit-mask: var(--fade) left top / calc(100% - 13px) 100% no-repeat, linear-gradient(#000, #000) right top / 13px 100% no-repeat;
+  mask: var(--fade) left top / calc(100% - 13px) 100% no-repeat, linear-gradient(#000, #000) right top / 13px 100% no-repeat;
+}
 #scroller:focus-visible { outline: none; }
+/* Styled through ::-webkit-scrollbar on purpose: scrollbar-color / scrollbar-width would switch
+   these rules off in Chromium 121+, and the grip notches need the pseudo-element background. */
+#scroller::-webkit-scrollbar { width: 13px; }
+/* The big corner break can reach ~39px down (or up) along the right edge; ending the track
+   28px short at both ends keeps the thumb on whole stone for every document's shape. */
+#scroller::-webkit-scrollbar-track { margin: 28px 0; }
+/* Three grip notches (5 x 1 px, 2 px apart) cut into the middle of the thumb, in the tablet's
+   own colour. The first stop jumps past the end of the thumb when it is shorter than 24px, which
+   collapses every notch to nothing, so short thumbs stay plain. */
+#scroller::-webkit-scrollbar-thumb {
+  --notches: linear-gradient(
+    transparent max(0px, (24px - 100%) * 1000),
+    transparent calc(50% - 3.5px), var(--tablet) calc(50% - 3.5px), var(--tablet) calc(50% - 2.5px),
+    transparent calc(50% - 2.5px), transparent calc(50% - 0.5px), var(--tablet) calc(50% - 0.5px), var(--tablet) calc(50% + 0.5px),
+    transparent calc(50% + 0.5px), transparent calc(50% + 2.5px), var(--tablet) calc(50% + 2.5px), var(--tablet) calc(50% + 3.5px),
+    transparent calc(50% + 3.5px)
+  );
+  background: var(--notches) center / 5px 100% no-repeat, var(--thumb);
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+#scroller::-webkit-scrollbar-thumb:hover { background: var(--notches) center / 5px 100% no-repeat, var(--thumb-hover); background-clip: content-box; }
 
 ::-webkit-scrollbar { width: 11px; height: 11px; }
 ::-webkit-scrollbar-thumb { background: var(--line); border: 3px solid transparent; background-clip: content-box; }
