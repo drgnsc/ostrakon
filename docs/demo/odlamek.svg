@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="320" height="200">
+  <title>Odłamek naczynia z trzema rzędami znaków</title>
+  <path d="M28 52 L96 18 L188 26 L262 14 L298 70 L284 142 L228 186 L120 176 L46 160 L18 104 Z" fill="#cdc3ae" stroke="#68645a" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M188 26 L176 64 L196 92" fill="none" stroke="#68645a" stroke-width="1.5"/>
+  <g stroke="#3d4f5c" stroke-width="4" stroke-linecap="round">
+    <path d="M62 82 H118 M134 82 H158 M174 82 H236"/>
+    <path d="M56 112 H96 M112 112 H200 M216 112 H252"/>
+    <path d="M70 142 H128 M144 142 H210"/>
+  </g>
+</svg>
