@@ -1,6 +1,6 @@
 [package]
 name = "ostrakon"
-version = "0.1.0"
+version = "0.2.0"
 description = "Local, read-only Markdown viewer styled as an ancient artifact"
 authors = ["Orphalese Solutions"]
 edition = "2021"
