@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <title>Ostrakon</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="main.js"></script>
+</head>
+<body>
+  <div id="slab-shadow"></div>
+  <div id="slab">
+    <svg id="slab-cracks" aria-hidden="true"></svg>
+
+    <header id="bar" data-tauri-drag-region>
+      <button id="archive-btn" class="mark" title="Archiwum (Ctrl+P)" aria-label="Archiwum">
+        <img src="assets/mark-small.png" alt="" width="22" height="22">
+      </button>
+      <div id="crumbs" data-tauri-drag-region></div>
+      <div class="controls">
+        <button id="theme-btn" title="Jasny / ciemny kamień (Ctrl+T)" aria-label="Zmień motyw">
+          <svg viewBox="0 0 24 24"><path d="M12 4.4a7.6 7.6 0 1 0 .3 15.2z"/><path d="M12 4.4a7.6 7.6 0 0 1 .3 15.2" fill="none"/></svg>
+        </button>
+        <button id="min-btn" aria-label="Minimalizuj">
+          <svg viewBox="0 0 24 24"><path d="M6 12.6 18 12" fill="none"/></svg>
+        </button>
+        <button id="max-btn" aria-label="Maksymalizuj">
+          <svg viewBox="0 0 24 24"><path d="M6.4 6.7 17.8 6.2 17.5 17.7 6.1 17.4Z" fill="none"/></svg>
+        </button>
+        <button id="close-btn" aria-label="Zamknij">
+          <svg viewBox="0 0 24 24"><path d="M6.6 6.2 17.6 17.8M17.8 6.5 6.2 17.5" fill="none"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div id="body">
+      <aside id="side">
+        <nav id="toc-wrap" hidden>
+          <h2 class="kicker">Spis</h2>
+          <ol id="toc"></ol>
+        </nav>
+        <nav id="siblings-wrap" hidden>
+          <h2 class="kicker">Obok</h2>
+          <ul id="siblings"></ul>
+        </nav>
+        <p id="stats"></p>
+      </aside>
+
+      <main id="stage">
+        <div id="tablet-shadow"></div>
+        <div id="tablet">
+          <svg id="cracks" aria-hidden="true"></svg>
+          <div id="scroller" tabindex="-1">
+            <article id="doc"></article>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <dialog id="palette" aria-label="Archiwum">
+    <div class="palette-inner">
+      <input id="palette-input" type="text" placeholder="Szukaj w archiwum… np. gripit prd" spellcheck="false" autocomplete="off">
+      <ul id="palette-list" role="listbox"></ul>
+      <footer id="palette-foot">
+        <span id="palette-status"></span>
+        <span id="palette-roots"></span>
+        <button id="add-root-btn" type="button">Dodaj folder</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <div id="toast" role="status" hidden></div>
+</body>
+</html>

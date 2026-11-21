@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Build output
+src-tauri/target/
+src-tauri/gen/
+dist/
+
+# Local secrets and environment
+.env*
+
+# Local-only reports (not for publication)
+rozpoznanie-*.md
+
+# OS and editor noise
+Thumbs.db
+desktop.ini
+.DS_Store
+*.log

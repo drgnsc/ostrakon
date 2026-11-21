@@ -1,0 +1,15 @@
+{
+  "name": "ostrakon",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local, read-only Markdown viewer styled as an ancient artifact.",
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "assets": "uv run --no-project --with pillow --with numpy python scripts/make_assets.py"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}
