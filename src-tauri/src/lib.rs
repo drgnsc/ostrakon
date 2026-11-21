@@ -233,9 +233,21 @@ fn watch_current_document(app: AppHandle) {
 /// The webview may only ever show the bundled app; anything else is refused at navigation.
 fn navigation_guard<R: Runtime>() -> TauriPlugin<R> {
     PluginBuilder::new("navigation-guard")
-        .on_navigation(|_, url| {
+        .on_navigation(|_webview, url| {
             let host = url.host_str().unwrap_or("");
-            host == "tauri.localhost" || url.scheme() == "tauri" || (cfg!(debug_assertions) && host == "localhost")
+            if host == "tauri.localhost" || url.scheme() == "tauri" {
+                return true;
+            }
+            #[cfg(debug_assertions)]
+            {
+                // `pnpm tauri dev` serves src/ from the CLI's own server (http://127.0.0.1:<port>)
+                // and hands that address to the app as devUrl. Only that exact origin is allowed.
+                let dev_server = _webview.config().build.dev_url.as_ref().is_some_and(|dev| dev.origin() == url.origin());
+                if host == "localhost" || dev_server {
+                    return true;
+                }
+            }
+            false
         })
         .build()
 }
